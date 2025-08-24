@@ -159,45 +159,57 @@ function ready() {
         });
     });
 }
-// === Miniapp exact-fit zoom (runs only in Farcaster) ===
+// === Farcaster miniapp: robust exact-fit zoom ===
 (function () {
   if (!document.documentElement.classList.contains('in-miniapp')) return;
 
-  // 1) Wrap title + game-info + game-container inside a stage we can scale
-  const body = document.body;
-  const stage = document.createElement('div');
-  stage.className = 'miniapp-stage';
-
-  // collect the three blocks in order
+  const body  = document.body;
   const title = document.querySelector('.page-title');
   const info  = document.querySelector('.game-info-container');
   const grid  = document.querySelector('.game-container');
   if (!(title && info && grid)) return;
 
-  // insert stage before title and move nodes inside
-  body.insertBefore(stage, title);
-  stage.appendChild(title);
-  stage.appendChild(info);
-  stage.appendChild(grid);
+  // Stage wrapper we can scale
+  let stage = document.querySelector('.miniapp-stage');
+  if (!stage) {
+    stage = document.createElement('div');
+    stage.className = 'miniapp-stage';
+    body.insertBefore(stage, title);
+    stage.appendChild(title);
+    stage.appendChild(info);
+    stage.appendChild(grid);
+  }
 
-  // 2) Compute scale so the whole stage fits inside the miniapp viewport
+  // Debounced, resilient fit
+  let rafId = 0, timerId = 0;
+  function requestFit(ms = 0) {
+    if (rafId) cancelAnimationFrame(rafId);
+    if (timerId) clearTimeout(timerId);
+    timerId = setTimeout(() => {
+      rafId = requestAnimationFrame(fitStage);
+    }, ms);
+  }
+
   function fitStage() {
-    // Safe paddings so nothing touches the miniapp chrome
-    const sidePad = 16;   // left/right breathing room
-    const topPad  = 8;    // extra gap under the top bar
-    const bottomPad = 10; // space above the pill/home bar
-
-    const availW = Math.max(0, window.innerWidth  - sidePad * 2);
-    const availH = Math.max(0, window.innerHeight - (topPad + bottomPad));
-
-    // Measure natural desktop size of the stage (unscaled)
+    // Temporarily remove scale to measure natural size
     stage.style.transform = 'none';
-    const rect = stage.getBoundingClientRect();
-    const baseW = rect.width;
-    const baseH = rect.height;
 
-    // Scale by whichever dimension is the limiter
+    // Safety padding so UI chrome doesn't overlap
+    const sidePad = 16;
+    const topPad = 8;
+    const bottomPad = 10;
+
+    const vv = window.visualViewport || window; // iOS often more accurate
+    const availW = Math.max(0, (vv.width  || window.innerWidth)  - sidePad * 2);
+    const availH = Math.max(0, (vv.height || window.innerHeight) - (topPad + bottomPad));
+
+    // Measure after current layout
+    const rect = stage.getBoundingClientRect();
+    const baseW = rect.width  || 1;
+    const baseH = rect.height || 1;
+
     const scale = Math.min(availW / baseW, availH / baseH, 1);
+    stage.style.transformOrigin = 'top center';
     stage.style.transform = `scale(${scale})`;
 
     // Center horizontally
@@ -205,12 +217,38 @@ function ready() {
     stage.style.marginRight = 'auto';
   }
 
-  // 3) Run now and on resize/rotate/content changes
-  const ro = new ResizeObserver(fitStage);
+  // Refit on things that can change layout
+  const ro = new ResizeObserver(() => requestFit(0));
   ro.observe(stage);
-  window.addEventListener('resize', fitStage);
-  window.addEventListener('orientationchange', fitStage);
 
-  // small defer so fonts/images have laid out
-  setTimeout(fitStage, 0);
+  // Overlays appearing/disappearing, font swaps, image loads, etc.
+  const mo = new MutationObserver(() => requestFit(0));
+  mo.observe(stage, { attributes: true, childList: true, subtree: true });
+
+  // Visual viewport changes (keyboard, system bars, rotate)
+  const vv = window.visualViewport;
+  if (vv) {
+    vv.addEventListener('resize', () => requestFit(0));
+    vv.addEventListener('scroll', () => requestFit(0));
+  }
+  window.addEventListener('resize', () => requestFit(0));
+  window.addEventListener('orientationchange', () => requestFit(50));
+
+  // Wait for fonts & images before first fit to avoid “zoomed” first frame
+  async function readyThenFit() {
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
+    // Wait for all images in stage
+    const imgs = Array.from(stage.querySelectorAll('img'));
+    await Promise.allSettled(imgs.map(img => {
+      if (img.complete) return Promise.resolve();
+      return new Promise(res => { img.addEventListener('load', res, { once:true }); img.addEventListener('error', res, { once:true }); });
+    }));
+    // Double RAF + small timeout lets Safari settle its viewport height
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    requestFit(10);
+  }
+
+  // Initial fit after DOM & (most) resources
+  if (document.readyState === 'complete') readyThenFit();
+  else window.addEventListener('load', readyThenFit, { once: true });
 })();
