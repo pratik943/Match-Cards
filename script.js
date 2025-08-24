@@ -1,5 +1,5 @@
 /* =======================
-   ORIGINAL GAME LOGIC
+   GAME LOGIC
 ======================= */
 class AudioController {
   constructor() {
@@ -63,8 +63,7 @@ class MixOrMatch {
   }
   hideCards() {
     this.cardsArray.forEach(card => {
-      card.classList.remove('visible');
-      card.classList.remove('matched');
+      card.classList.remove('visible', 'matched');
     });
   }
   flipCard(card) {
@@ -73,7 +72,6 @@ class MixOrMatch {
       this.totalClicks++;
       this.ticker.innerText = this.totalClicks;
       card.classList.add('visible');
-
       if (this.cardToCheck) this.checkForCardMatch(card);
       else this.cardToCheck = card;
     }
@@ -100,7 +98,7 @@ class MixOrMatch {
       this.busy = false;
     }, 1000);
   }
-  shuffleCards(cardsArray) { // Fisher–Yates
+  shuffleCards(cardsArray) {
     for (let i = cardsArray.length - 1; i > 0; i--) {
       const randIndex = Math.floor(Math.random() * (i + 1));
       cardsArray[randIndex].style.order = i;
@@ -128,22 +126,14 @@ function ready() {
       game.startGame();
     });
   });
-
-  cards.forEach(card => {
-    card.addEventListener('click', () => game.flipCard(card));
-  });
+  cards.forEach(card => card.addEventListener('click', () => game.flipCard(card)));
 }
 
 /* ============================================
-   FARCASTER MINIAPP — unified exact-fit wrapper
-   - Works on iOS + Android
-   - Forces 4×4 (CSS handles columns), desktop size,
-     then scales one wrapper to fit viewport.
+   FARCASTER MINIAPP — unified stage scaling
 ============================================ */
 (function () {
-  // Only run inside Farcaster (classes are added in index.html SDK script)
-  const inMiniapp = document.documentElement.classList.contains('in-miniapp') ||
-                    document.body.classList.contains('in-miniapp');
+  const inMiniapp = document.documentElement.classList.contains('in-miniapp');
   if (!inMiniapp) return;
 
   const body  = document.body;
@@ -152,93 +142,39 @@ function ready() {
   const grid  = document.querySelector('.game-container');
   if (!(title && info && grid)) return;
 
-  // Create a single stage wrapper (idempotent)
+  // Wrap content
   let stage = document.querySelector('.miniapp-stage');
   if (!stage) {
     stage = document.createElement('div');
     stage.className = 'miniapp-stage';
-    // Keep DOM order: title → info → grid (move them into stage)
     body.insertBefore(stage, title);
     stage.appendChild(title);
     stage.appendChild(info);
     stage.appendChild(grid);
   }
 
-  // Debounced fit
-  let rafId = 0, tId = 0;
-  const requestFit = (ms = 0) => {
-    if (rafId) cancelAnimationFrame(rafId);
-    if (tId) clearTimeout(tId);
-    tId = setTimeout(() => { rafId = requestAnimationFrame(fitStage); }, ms);
-  };
-
-  // Small, device-agnostic breathing room
-  const PADS = { side: 24, top: 12, bottom: 20 };
-
-  // Use the smallest reliable viewport candidate
-  function getAvailSize() {
-    const vv = window.visualViewport;
-    const widths  = [vv && vv.width,  window.innerWidth,  document.documentElement.clientWidth].filter(Boolean);
-    const heights = [vv && vv.height, window.innerHeight, document.documentElement.clientHeight].filter(Boolean);
-    const w = Math.max(0, Math.min.apply(null, widths)  - PADS.side * 2);
-    const h = Math.max(0, Math.min.apply(null, heights) - (PADS.top + PADS.bottom));
-    return { w, h };
-  }
-
   function fitStage() {
-    // Measure unscaled intrinsic size
     stage.style.transform = 'none';
     const rect  = stage.getBoundingClientRect();
     const baseW = rect.width  || 1;
     const baseH = rect.height || 1;
 
-    const { w: availW, h: availH } = getAvailSize();
-    let scale = Math.min(availW / baseW, availH / baseH, 1);
-
-    if (!isFinite(scale) || scale <= 0) {
-      stage.style.transform = 'scale(1)';
-      // try again shortly (Android URL bar anim etc.)
-      requestFit(80);
-      return;
-    }
+    const vv = window.visualViewport;
+    const availW = (vv?.width || window.innerWidth) - 20;
+    const availH = (vv?.height || window.innerHeight) - 20;
+    const scale = Math.min(availW / baseW, availH / baseH, 1);
 
     stage.style.transformOrigin = 'top center';
     stage.style.transform = `scale(${scale})`;
-    stage.style.marginLeft = 'auto';
-    stage.style.marginRight = 'auto';
   }
 
-  // Observe layout & viewport changes
-  const ro = new ResizeObserver(() => requestFit(0));
-  ro.observe(stage);
-
-  const mo = new MutationObserver(() => requestFit(0));
-  mo.observe(stage, { attributes: true, childList: true, subtree: true });
-
-  const vv = window.visualViewport;
-  if (vv) {
-    vv.addEventListener('resize', () => requestFit(0));
-    vv.addEventListener('scroll', () => requestFit(0));
-  }
-  window.addEventListener('resize', () => requestFit(0));
-  window.addEventListener('orientationchange', () => requestFit(100));
-  window.addEventListener('pageshow', () => requestFit(120)); // Android restore/bfcache
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') requestFit(120);
-  });
-
-  // First fit: wait for fonts + images, then settle
-  async function firstFit() {
-    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
-    const imgs = Array.from(stage.querySelectorAll('img'));
-    await Promise.allSettled(imgs.map(img => img.complete ? Promise.resolve()
-      : new Promise(res => { img.addEventListener('load', res, { once:true }); img.addEventListener('error', res, { once:true }); })));
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-    requestFit(0);
-    setTimeout(() => requestFit(140), 140); // settle pass for Android URL bar
-    setTimeout(() => requestFit(300), 300);
+  const requestFit = () => requestAnimationFrame(fitStage);
+  window.addEventListener('resize', requestFit);
+  window.addEventListener('orientationchange', () => setTimeout(requestFit, 100));
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', requestFit);
+    visualViewport.addEventListener('scroll', requestFit);
   }
 
-  if (document.readyState === 'complete') firstFit();
-  else window.addEventListener('load', firstFit, { once: true });
+  window.addEventListener('load', requestFit, { once: true });
 })();
