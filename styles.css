@@ -212,3 +212,33 @@ body {
     align-items: center;
   }
 }
+
+/* --- 👇 Miniapp-only overrides 👇 --- */
+html.in-miniapp,
+body.in-miniapp {
+  height: 100svh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+body.in-miniapp .page-title {
+  font-size: clamp(2.2rem, 8vw, 3.2rem);
+  margin: 8px 0 12px;
+}
+
+body.in-miniapp .game-container {
+  width: min(424px, 100vw);
+  margin: 8px auto 12px;
+  grid-gap: 8px;
+}
+
+@keyframes overlay-grow-mini {
+  from { background-color: rgba(0,0,0,0); font-size: 0; }
+  to   { background-color: rgba(0,0,0,.8); font-size: 6rem; }
+}
+body.in-miniapp .overlay-text.visible {
+  animation: overlay-grow-mini 400ms forwards;
+}
