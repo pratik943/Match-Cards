@@ -228,3 +228,11 @@ body.in-miniapp .card-face {
 body.in-miniapp .overlay-text.visible {
   animation: overlay-grow-mini 400ms forwards;
 }
+/* === Force 4x4 grid inside Farcaster miniapp === */
+body.in-miniapp .game-container {
+  display: grid !important;
+  grid-template-columns: repeat(4, auto) !important;
+  grid-auto-rows: auto;
+  grid-gap: 10px;
+  justify-content: center;
+}
