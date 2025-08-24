@@ -406,3 +406,16 @@ body.in-miniapp {
   height: 100dvh; /* use dynamic viewport height (fixes Android URL bar) */
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
+/* Ensure stage contents are measured correctly in Android WebView */
+.in-miniapp .miniapp-stage {
+  display: inline-block;   /* so getBoundingClientRect measures real size */
+  width: auto;
+  height: auto;
+}
+
+.in-miniapp body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
