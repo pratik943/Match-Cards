@@ -344,3 +344,119 @@ function ready() {
   if (document.readyState === 'complete') readyThenFit();
   else window.addEventListener('load', readyThenFit, { once: true });
 })();
+/* ============================================
+   Farcaster Miniapp — exact-fit zoom (iOS + Android hardened)
+============================================ */
+(function () {
+  if (!document.documentElement.classList.contains('in-miniapp')) return;
+
+  const body  = document.body;
+  const title = document.querySelector('.page-title');
+  const info  = document.querySelector('.game-info-container');
+  const grid  = document.querySelector('.game-container');
+  if (!(title && info && grid)) return;
+
+  // Stage wrapper we scale as one unit
+  let stage = document.querySelector('.miniapp-stage');
+  if (!stage) {
+    stage = document.createElement('div');
+    stage.className = 'miniapp-stage';
+    body.insertBefore(stage, title);
+    stage.appendChild(title);
+    stage.appendChild(info);
+    stage.appendChild(grid);
+  }
+
+  // Debounced fitter
+  let rafId = 0, timerId = 0;
+  function requestFit(ms = 0) {
+    if (rafId) cancelAnimationFrame(rafId);
+    if (timerId) clearTimeout(timerId);
+    timerId = setTimeout(() => { rafId = requestAnimationFrame(fitStage); }, ms);
+  }
+
+  function getAvailSize() {
+    const vv = window.visualViewport;
+    // candidate widths/heights (take the smallest reliable)
+    const candW = [
+      vv && vv.width,
+      window.innerWidth,
+      document.documentElement.clientWidth
+    ].filter(Boolean);
+    const candH = [
+      vv && vv.height,
+      window.innerHeight,
+      document.documentElement.clientHeight
+    ].filter(Boolean);
+
+    const sidePad   = 16;
+    const topPad    = 8;
+    const bottomPad = 10;
+
+    const w = Math.max(0, Math.min.apply(null, candW) - sidePad * 2);
+    const h = Math.max(0, Math.min.apply(null, candH) - (topPad + bottomPad));
+    return { w, h };
+  }
+
+  function fitStage() {
+    // measure unscaled
+    stage.style.transform = 'none';
+    const rect = stage.getBoundingClientRect();
+    const baseW = rect.width  || 1;
+    const baseH = rect.height || 1;
+
+    const { w: availW, h: availH } = getAvailSize();
+    let scale = Math.min(availW / baseW, availH / baseH, 1);
+
+    // guard against transient zero/NaN
+    if (!isFinite(scale) || scale <= 0) {
+      // try again a hair later
+      scale = 1;
+      requestFit(50);
+    }
+
+    stage.style.transformOrigin = 'top center';
+    stage.style.transform = `scale(${scale})`;
+    stage.style.marginLeft = 'auto';
+    stage.style.marginRight = 'auto';
+  }
+
+  // Observe layout changes within stage
+  const ro = new ResizeObserver(() => requestFit(0));
+  ro.observe(stage);
+
+  const mo = new MutationObserver(() => requestFit(0));
+  mo.observe(stage, { attributes: true, childList: true, subtree: true });
+
+  // Viewport changes (iOS + Android)
+  const vv = window.visualViewport;
+  if (vv) {
+    vv.addEventListener('resize', () => requestFit(0));
+    vv.addEventListener('scroll', () => requestFit(0));
+  }
+  window.addEventListener('resize', () => requestFit(0));
+  window.addEventListener('orientationchange', () => requestFit(100));
+
+  // Android restore / bfcache cases
+  window.addEventListener('pageshow', () => requestFit(100));
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestFit(100);
+  });
+
+  // Wait for fonts & images, then do a settle loop (handles Android URL bar anim)
+  async function readyThenFit() {
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
+    const imgs = Array.from(stage.querySelectorAll('img'));
+    await Promise.allSettled(imgs.map(img => img.complete ? Promise.resolve()
+      : new Promise(res => (img.addEventListener('load', res, { once:true }),
+                            img.addEventListener('error', res, { once:true })))));
+    // double rAF for layout, then a small settle sequence
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    requestFit(0);
+    setTimeout(() => requestFit(120), 120);
+    setTimeout(() => requestFit(260), 260);
+  }
+
+  if (document.readyState === 'complete') readyThenFit();
+  else window.addEventListener('load', readyThenFit, { once: true });
+})();
