@@ -395,3 +395,8 @@ body.in-miniapp .game-info  { font-size: clamp(1.4rem, 5vw, 2.1rem); margin: 2px
 @media (max-width: 600px) {
   body.in-miniapp .game-container { grid-template-columns: repeat(4, 125px) !important; }
 }
+/* Avoid blurry scaling in some webviews */
+body.in-miniapp .miniapp-stage {
+  transform: translateZ(0);
+  will-change: transform;
+}
