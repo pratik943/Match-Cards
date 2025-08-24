@@ -3,7 +3,6 @@
   src: url("Assets/Fonts/Creepy.woff") format("woff"),
        url("Assets/Fonts/Creepy.woff2") format("woff2");
 }
-
 @font-face {
   font-family: "Lunacy";
   src: url("Assets/Fonts/Lunacy.woff") format("woff"),
@@ -23,6 +22,7 @@ body {
   background: radial-gradient(#9D5900, #3D2200);
 }
 
+/* Title + counters */
 .page-title {
   color: #FF6D00;
   font-family: Creepy, serif;
@@ -30,18 +30,17 @@ body {
   text-align: center;
   font-size: 6em;
 }
-
 .game-info-container {
   grid-column: 1 / -1;
   display: flex;
   justify-content: space-between;
 }
-
 .game-info {
   color: #FFBB89;
   font-size: 4em;
 }
 
+/* Board grid */
 .game-container {
   margin: 50px auto;
   display: grid;
@@ -51,13 +50,13 @@ body {
   perspective: 500px;
 }
 
+/* Cards */
 .card {
   position: relative;
   cursor: url("Assets/Cursors/GhostHover.cur"), auto;
   height: 175px;
   width: 125px;
 }
-
 .card-face {
   position: absolute;
   display: flex;
@@ -72,54 +71,33 @@ body {
   transition: transform 500ms ease-in-out;
   backface-visibility: hidden;
 }
-
 .card.visible .card-back { transform: rotateY(-180deg); }
 .card.visible .card-front { transform: rotateY(0); }
-
 .card.matched .card-front .card-value {
   animation: dance 1s linear infinite 500ms;
 }
-
 .card-back {
   background-color: black;
   border-color: #FF6D00;
   transform: rotateY(0);
 }
-
-.cob-web {
-  position: absolute;
-  transition: width 100ms ease-in-out, height 100ms ease-in-out;
-  width: 47px;
-  height: 47px;
-}
-
+.cob-web { position: absolute; transition: width 100ms, height 100ms; width: 47px; height: 47px; }
 .card-face:hover .cob-web { width: 52px; height: 52px; }
-
 .cob-web-top-left { transform: rotate(270deg); top: 0; left: 0; }
 .cob-web-top-right { top: 0; right: 0; }
 .cob-web-bottom-left { transform: rotate(180deg); bottom: 0; left: 0; }
 .cob-web-bottom-right { transform: rotate(90deg); bottom: 0; right: 0; }
-
-.spider {
-  align-self: flex-start;
-  transition: transform 100ms ease-in-out;
-  transform: translateY(-10px);
-}
+.spider { align-self: flex-start; transition: transform 100ms; transform: translateY(-10px); }
 .card-back:hover .spider { transform: translateY(0); }
-
-.card-value {
-  position: relative;
-  transition: transform 100ms ease-in-out;
-  transform: scale(.9);
-}
+.card-value { position: relative; transition: transform 100ms; transform: scale(.9); }
 .card-front:hover .card-value { transform: scale(1); }
-
 .card-front {
   background-color: #FFBB89;
   border-color: #333;
   transform: rotateY(180deg);
 }
 
+/* Overlay text */
 .overlay-text {
   top: 0; left: 0; right: 0; bottom: 0;
   z-index: 100;
@@ -132,70 +110,60 @@ body {
   font-family: Creepy, serif;
   transition: background-color 500ms, font-size 500ms;
 }
-
 .overlay-text-small { font-size: .3em; }
-
-.overlay-text.visible {
-  display: flex;
-  animation: overlay-grow 500ms forwards;
-}
-
+.overlay-text.visible { display: flex; animation: overlay-grow 500ms forwards; }
 @keyframes dance {
-  0%, 100% { transform: rotate(0) }
-  25%      { transform: rotate(-30deg) }
-  75%      { transform: rotate(30deg) }
+  0%,100% { transform: rotate(0) }
+  25% { transform: rotate(-30deg) }
+  75% { transform: rotate(30deg) }
 }
-
 @keyframes overlay-grow {
-  from { background-color: rgba(0, 0, 0, 0); font-size: 0; }
-  to   { background-color: rgba(0, 0, 0, .8); font-size: 10em; }
+  from { background-color: rgba(0,0,0,0); font-size: 0; }
+  to   { background-color: rgba(0,0,0,.8); font-size: 10em; }
 }
 
+/* Mobile fallback */
 @media (max-width: 600px) {
   .game-container { grid-template-columns: repeat(2, auto) }
   .game-info-container { flex-direction: column; align-items: center; }
 }
 
 /* =====================================================
-   Farcaster Miniapp — unified CSS (iOS + Android)
-   Forces 4×4 desktop board, scales stage to fit
+   FARCASTER MINIAPP OVERRIDES (iOS + Android)
 ===================================================== */
 html.in-miniapp,
 body.in-miniapp {
-  height: 100dvh; /* dynamic viewport height fixes Android + iOS */
+  height: 100dvh;
   padding-bottom: env(safe-area-inset-bottom, 0);
   overflow: hidden;
   overscroll-behavior: none;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-
   background: radial-gradient(#9D5900, #3D2200);
 }
 
-/* Stage wrapper (JS adds .miniapp-stage) */
+/* Stage wrapper (scaled in JS) */
 .in-miniapp .miniapp-stage {
-  display: inline-block;   /* stable measurement */
+  display: inline-block;
   transform-origin: top center;
-  transform: translateZ(0); /* reduces blur while scaled */
+  transform: translateZ(0);
   will-change: transform;
   margin-top: 10px;
 }
 
-/* Title + counters compact */
+/* Compact title/counters */
 body.in-miniapp .page-title {
   font-size: clamp(2.2rem, 7vw, 3.2rem);
   margin: 12px 0 6px;
-  text-align: center;
 }
 body.in-miniapp .game-info {
   font-size: clamp(1.4rem, 5vw, 2.1rem);
   margin: 2px 10px;
 }
 
-/* Board: always 4×4 desktop sizing */
+/* Force 4×4 desktop board */
 body.in-miniapp .game-container {
   display: grid !important;
   grid-template-columns: repeat(4, 125px) !important;
@@ -203,25 +171,15 @@ body.in-miniapp .game-container {
   justify-content: center;
   margin: 12px auto;
 }
-
-/* Override mobile @media (prevent 2 columns) */
 @media (max-width: 600px) {
   body.in-miniapp .game-container {
     grid-template-columns: repeat(4, 125px) !important;
   }
 }
 
-/* Fixed card size — scale is applied to stage, not cards */
-body.in-miniapp .card {
-  width: 125px;
-  height: 175px;
-}
-body.in-miniapp .card-face {
-  width: 100%;
-  height: 100%;
-}
+/* Fixed cards */
+body.in-miniapp .card { width: 125px; height: 175px; }
+body.in-miniapp .card-face { width: 100%; height: 100%; }
 
-/* Overlay text scaled down for miniapp */
-body.in-miniapp .overlay-text.visible {
-  font-size: 5rem;
-}
+/* Smaller overlay for miniapp */
+body.in-miniapp .overlay-text.visible { font-size: 5rem; }
