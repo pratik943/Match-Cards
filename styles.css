@@ -400,3 +400,9 @@ body.in-miniapp .miniapp-stage {
   transform: translateZ(0);
   will-change: transform;
 }
+/* Android/iOS reliable viewport height */
+html.in-miniapp,
+body.in-miniapp {
+  height: 100dvh; /* use dynamic viewport height (fixes Android URL bar) */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
