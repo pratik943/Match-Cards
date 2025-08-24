@@ -1,18 +1,16 @@
 @font-face {
-    font-family: "Creepy";
-    src: url("Assets/Fonts/Creepy.woff") format("woff"),
-         url("Assets/Fonts/Creepy.woff2") format("woff2");
+  font-family: "Creepy";
+  src: url("Assets/Fonts/Creepy.woff") format("woff"),
+       url("Assets/Fonts/Creepy.woff2") format("woff2");
 }
 
 @font-face {
-    font-family: "Lunacy";
-    src: url("Assets/Fonts/Lunacy.woff") format("woff"),
-         url("Assets/Fonts/Lunacy.woff2") format("woff2");
+  font-family: "Lunacy";
+  src: url("Assets/Fonts/Lunacy.woff") format("woff"),
+       url("Assets/Fonts/Lunacy.woff2") format("woff2");
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html {
   min-height: 100vh;
@@ -107,7 +105,6 @@ body {
   transition: transform 100ms ease-in-out;
   transform: translateY(-10px);
 }
-
 .card-back:hover .spider { transform: translateY(0); }
 
 .card-value {
@@ -115,7 +112,6 @@ body {
   transition: transform 100ms ease-in-out;
   transform: scale(.9);
 }
-
 .card-front:hover .card-value { transform: scale(1); }
 
 .card-front {
@@ -161,313 +157,71 @@ body {
 }
 
 /* =====================================================
-   Farcaster miniapp: zoomed desktop + alignment tweaks
-   - desktop board kept at original size, then scaled
-   - title kept visible
-   - grid nudged slightly left and lower
+   Farcaster Miniapp — unified CSS (iOS + Android)
+   Forces 4×4 desktop board, scales stage to fit
 ===================================================== */
 html.in-miniapp,
 body.in-miniapp {
-  height: 100svh;
+  height: 100dvh; /* dynamic viewport height fixes Android + iOS */
+  padding-bottom: env(safe-area-inset-bottom, 0);
   overflow: hidden;
   overscroll-behavior: none;
+
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+
   background: radial-gradient(#9D5900, #3D2200);
 }
 
-/* keep the title visible and nicely sized */
+/* Stage wrapper (JS adds .miniapp-stage) */
+.in-miniapp .miniapp-stage {
+  display: inline-block;   /* stable measurement */
+  transform-origin: top center;
+  transform: translateZ(0); /* reduces blur while scaled */
+  will-change: transform;
+  margin-top: 10px;
+}
+
+/* Title + counters compact */
 body.in-miniapp .page-title {
-  font-size: clamp(2.6rem, 8vw, 3.6rem);
-  margin: 16px 0 8px; /* more top space so it never clips */
+  font-size: clamp(2.2rem, 7vw, 3.2rem);
+  margin: 12px 0 6px;
   text-align: center;
 }
-
-/* slightly smaller counters so the board has room */
 body.in-miniapp .game-info {
-  font-size: clamp(1.6rem, 6vw, 2.6rem);
-  margin: 4px 12px;
+  font-size: clamp(1.4rem, 5vw, 2.1rem);
+  margin: 2px 10px;
 }
 
-/* base desktop grid dimensions (no scale) */
-body.in-miniapp {
-  --baseW: 530px; /* 4*125 + 3*10 */
-  --baseH: 730px; /* 4*175 + 3*10 */
-  --headerSpace: 160px;            /* title + counters + margins */
-  --availW: calc(100vw - 24px);    /* a little side padding */
-  --availH: calc(100svh - var(--headerSpace));
-  --scaleX: calc(var(--availW) / var(--baseW));
-  --scaleY: calc(var(--availH) / var(--baseH));
-  --miniapp-scale: min(var(--scaleX), var(--scaleY), 1);
-}
-
-/* keep desktop layout; just scale it, then offset left/down */
-body.in-miniapp .game-container {
-  width: var(--baseW);
-  height: var(--baseH);
-  margin: 20px auto 12px;           /* push a bit lower */
-  margin-left: -10px;               /* nudge slightly left; adjust to taste */
-  transform-origin: top center;
-  transform: scale(var(--miniapp-scale));
-  will-change: transform;
-}
-
-/* ensure card boxes & faces always fill the scaled grid cell */
-body.in-miniapp .card,
-body.in-miniapp .card-face {
-  width: 100%;
-  height: 100%;
-}
-
-/* smaller overlay animation so it fits on miniapp */
-@keyframes overlay-grow-mini {
-  from { background-color: rgba(0,0,0,0); font-size: 0; }
-  to   { background-color: rgba(0,0,0,.8); font-size: 6rem; }
-}
-body.in-miniapp .overlay-text.visible {
-  animation: overlay-grow-mini 400ms forwards;
-}
-/* === Force 4x4 grid inside Farcaster miniapp === */
+/* Board: always 4×4 desktop sizing */
 body.in-miniapp .game-container {
   display: grid !important;
-  grid-template-columns: repeat(4, auto) !important;
-  grid-auto-rows: auto;
-  grid-gap: 10px;
+  grid-template-columns: repeat(4, 125px) !important;
+  grid-gap: 10px !important;
   justify-content: center;
-}
-/* ===== Farcaster miniapp: true 4×4, no distortion, no scroll ===== */
-html.in-miniapp,
-body.in-miniapp {
-  height: 100svh;
-  overflow: hidden;
-  overscroll-behavior: none;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  margin: 12px auto;
 }
 
-/* Title + counters (keep visible, compact) */
-body.in-miniapp .page-title { font-size: clamp(2.4rem, 8vw, 3.4rem); margin: 14px 0 6px; }
-body.in-miniapp .game-info   { font-size: clamp(1.6rem, 6vw, 2.4rem); margin: 4px 12px; }
-
-/* --- Layout math for perfect 4×4 ---
-   We compute the card width from BOTH available width and height,
-   then pick the smaller so the board fits without squishing.
-*/
-body.in-miniapp {
-  --cols: 4;
-  --rows: 4;
-  --gap: 10px;             /* matches your desktop gap */
-  --sidePad: 24px;         /* tiny breathing room on sides */
-  --headerSpace: 150px;    /* title + counters + margins */
-
-  --availW: calc(100vw - var(--sidePad));
-  --availH: calc(100svh - var(--headerSpace));
-
-  /* width-fit: (availW - gaps) / 4 */
-  --widthFit: calc((var(--availW) - (var(--cols) - 1) * var(--gap)) / var(--cols));
-  /* height-fit: convert per-row height to width using 5:7 ratio
-     perRowH = (availH - gaps)/4  => cardW = perRowH * 5/7
-  */
-  --heightFit: calc(((var(--availH) - (var(--rows) - 1) * var(--gap)) / var(--rows)) * 5 / 7);
-
-  /* Final card width = min(widthFit, heightFit) */
-  --cardW: min(var(--widthFit), var(--heightFit));
-}
-
-/* Force 4 columns; position a bit left & down as requested */
-body.in-miniapp .game-container {
-  display: grid !important;
-  grid-template-columns: repeat(4, var(--cardW)) !important;
-  grid-auto-rows: auto;
-  grid-gap: var(--gap);
-  justify-content: center;
-  margin: 16px auto 12px;
-  margin-left: -8px;    /* nudge left; tweak to taste */
-}
-
-/* Critical: NO transform scaling (prevents squish) */
-body.in-miniapp .game-container { transform: none !important; }
-
-/* Cards keep aspect ratio perfectly (125×175 → 5:7) */
-body.in-miniapp .card {
-  width: var(--cardW);
-  aspect-ratio: 5 / 7;
-  height: auto;           /* aspect-ratio drives height */
-}
-
-/* Faces still fill the card box */
-body.in-miniapp .card-face { width: 100%; height: 100%; }
-/* ==== Farcaster miniapp: desktop-look via zoom (always 4x4) ==== */
-html.in-miniapp,
-body.in-miniapp {
-  height: 100svh;
-  overflow: hidden;
-  overscroll-behavior: none;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  background: radial-gradient(#9D5900, #3D2200);
-}
-
-/* keep title/counters visible but compact */
-body.in-miniapp .page-title { font-size: clamp(2.4rem, 8vw, 3.4rem); margin: 14px 0 6px; }
-body.in-miniapp .game-info   { font-size: clamp(1.5rem, 6vw, 2.2rem); margin: 2px 10px; }
-
-/* Desktop board dimensions (no scale) */
-body.in-miniapp {
-  --baseW: 530px;  /* 4*125 + 3*10 */
-  --baseH: 730px;  /* 4*175 + 3*10 */
-  --sidePad: 20px;
-  --headerSpace: 130px; /* title + counters + margins */
-
-  --availW: calc(100vw - var(--sidePad));
-  --availH: calc(100svh - var(--headerSpace));
-
-  --scaleX: calc(var(--availW) / var(--baseW));
-  --scaleY: calc(var(--availH) / var(--baseH));
-  --miniapp-scale: min(var(--scaleX), var(--scaleY), 1);
-}
-
-/* Freeze layout at desktop size; then scale down to fit */
-body.in-miniapp .game-container {
-  width: var(--baseW);
-  height: var(--baseH);
-  display: grid;
-  grid-template-columns: repeat(4, 125px); /* force 4 columns */
-  grid-gap: 10px;
-  justify-content: center;
-  margin: 12px auto 12px;
-  transform-origin: top center;
-  transform: scale(var(--miniapp-scale));
-}
-
-/* Override your mobile @media (which sets 2 columns under 600px) */
+/* Override mobile @media (prevent 2 columns) */
 @media (max-width: 600px) {
   body.in-miniapp .game-container {
     grid-template-columns: repeat(4, 125px) !important;
   }
 }
 
-/* Keep card boxes at desktop size; scaling handles fit */
-body.in-miniapp .card       { width: 125px; height: 175px; }
-body.in-miniapp .card-face  { width: 100%; height: 100%; }
-
-/* Optional: nudge board slightly left/down if you want */
-body.in-miniapp .game-container { margin-left: -8px; /* tweak */ }
-/* === Farcaster miniapp: desktop board, exact zoom to fit === */
-html.in-miniapp, body.in-miniapp {
-  height: 100svh;
-  overflow: hidden;
-  overscroll-behavior: none;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  background: radial-gradient(#9D5900, #3D2200);
+/* Fixed card size — scale is applied to stage, not cards */
+body.in-miniapp .card {
+  width: 125px;
+  height: 175px;
+}
+body.in-miniapp .card-face {
+  width: 100%;
+  height: 100%;
 }
 
-/* Wrap that gets scaled (we'll create it in JS) */
-body.in-miniapp .miniapp-stage {
-  /* desktop layout size; we’ll measure and scale this box */
-  width: max-content;
-  transform-origin: top center;
-  margin-top: 8px;      /* space under the top bar */
-}
-
-/* Keep desktop sizes inside the stage */
-body.in-miniapp .game-container {
-  display: grid !important;
-  grid-template-columns: repeat(4, 125px) !important; /* force 4 cols */
-  grid-gap: 10px !important;
-  justify-content: center;
-}
-
-/* Cards = desktop dimensions (scale applies to the whole stage) */
-body.in-miniapp .card      { width: 125px; height: 175px; }
-body.in-miniapp .card-face { width: 100%; height: 100%; }
-
-/* Compact title/counters so stage height is predictable */
-body.in-miniapp .page-title { font-size: clamp(2.4rem, 8vw, 3.4rem); margin: 12px 0 6px; }
-body.in-miniapp .game-info  { font-size: clamp(1.4rem, 5vw, 2.1rem); margin: 2px 10px; }
-
-/* Kill the mobile media rule for miniapp (keeps 4 columns) */
-@media (max-width: 600px) {
-  body.in-miniapp .game-container { grid-template-columns: repeat(4, 125px) !important; }
-}
-/* Avoid blurry scaling in some webviews */
-body.in-miniapp .miniapp-stage {
-  transform: translateZ(0);
-  will-change: transform;
-}
-/* Android/iOS reliable viewport height */
-html.in-miniapp,
-body.in-miniapp {
-  height: 100dvh; /* use dynamic viewport height (fixes Android URL bar) */
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-/* Ensure stage contents are measured correctly in Android WebView */
-.in-miniapp .miniapp-stage {
-  display: inline-block;   /* so getBoundingClientRect measures real size */
-  width: auto;
-  height: auto;
-}
-
-.in-miniapp body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-}
-/* === Farcaster Miniapp hardening (iOS + Android) === */
-
-/* Use dynamic viewport height so Android URL bar changes don't clip content */
-html.in-miniapp,
-body.in-miniapp {
-  height: 100dvh;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-/* Make the scaled stage measurable and stable for Android WebView */
-.in-miniapp .miniapp-stage {
-  display: inline-block;     /* ensures getBoundingClientRect() reads true size */
-  width: auto;
-  height: auto;
-  transform: translateZ(0);  /* hint to GPU; reduces blurriness on scale */
-  will-change: transform;
-}
-
-/* Keep overall layout tidy when wrapped inside the miniapp stage */
-.in-miniapp body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-}
-/* === Farcaster Miniapp hardening (iOS + Android) === */
-html.in-miniapp,
-body.in-miniapp {
-  height: 100dvh;                           /* tracks dynamic viewport reliably */
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-/* Wrap created in JS; make it measurable so scaling is accurate on Android */
-.in-miniapp .miniapp-stage {
-  display: inline-block;                    /* real intrinsic size for measuring */
-  width: auto;
-  height: auto;
-  transform: translateZ(0);                 /* reduce blur while scaled */
-  will-change: transform;
-}
-
-/* Gentle spacing so content doesn't touch top/bottom chrome */
-.in-miniapp .page-title { margin-top: 10px; margin-bottom: 6px; }
-.in-miniapp .game-info-container { margin-bottom: 10px; }
-
-/* Keep the grid centered even when scaled */
-.in-miniapp body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
+/* Overlay text scaled down for miniapp */
+body.in-miniapp .overlay-text.visible {
+  font-size: 5rem;
 }
