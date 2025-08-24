@@ -22,17 +22,17 @@
     }
   }' />
 
-  <!-- ✅ Farcaster Mini App SDK (adds in-miniapp class when running in client) -->
-  <script type="module">
-    import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
-    (async () => {
-      // Add a marker class only in the Farcaster client (web stays full size)
-      try { document.body.classList.add('in-miniapp'); } catch (e) {}
-      await sdk.actions.ready(); // signal "ready" to Farcaster
-    })().catch(() => {
-      // Outside Farcaster: do nothing (no class added), page remains full size
-    });
-  </script>
+  <!-- ✅ Farcaster Mini App SDK -->
+<script type="module">
+  import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+  (async () => {
+    await sdk.actions.ready();                 // tell Farcaster client we're ready
+    document.documentElement.classList.add('in-miniapp'); // <html>
+    document.body.classList.add('in-miniapp');            // <body>
+  })().catch(() => {
+    // Not inside Farcaster → no miniapp class, stay full-size
+  });
+</script>
 
   <!-- Your separate CSS & JS -->
   <link href="styles.css" rel="stylesheet">
