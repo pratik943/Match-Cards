@@ -195,9 +195,9 @@ function ready() {
     const candW = [vv && vv.width, window.innerWidth, document.documentElement.clientWidth].filter(Boolean);
     const candH = [vv && vv.height, window.innerHeight, document.documentElement.clientHeight].filter(Boolean);
 
-    const sidePad   = 16;
-    const topPad    = 8;
-    const bottomPad = 10;
+    const sidePad   = 24;
+    const topPad    = 16;
+    const bottomPad = 22;
 
     const w = Math.max(0, Math.min.apply(null, candW) - sidePad * 2);
     const h = Math.max(0, Math.min.apply(null, candH) - (topPad + bottomPad));
