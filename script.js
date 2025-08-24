@@ -8,27 +8,12 @@ class AudioController {
         this.bgMusic.volume = 0.5;
         this.bgMusic.loop = true;
     }
-    startMusic() {
-        this.bgMusic.play();
-    }
-    stopMusic() {
-        this.bgMusic.pause();
-        this.bgMusic.currentTime = 0;
-    }
-    flip() {
-        this.flipSound.play();
-    }
-    match() {
-        this.matchSound.play();
-    }
-    victory() {
-        this.stopMusic();
-        this.victorySound.play();
-    }
-    gameOver() {
-        this.stopMusic();
-        this.gameOverSound.play();
-    }
+    startMusic() { this.bgMusic.play(); }
+    stopMusic() { this.bgMusic.pause(); this.bgMusic.currentTime = 0; }
+    flip()      { this.flipSound.play(); }
+    match()     { this.matchSound.play(); }
+    victory()   { this.stopMusic(); this.victorySound.play(); }
+    gameOver()  { this.stopMusic(); this.gameOverSound.play(); }
 }
 
 class MixOrMatch {
@@ -40,7 +25,6 @@ class MixOrMatch {
         this.ticker = document.getElementById('flips');
         this.audioController = new AudioController();
     }
-
     startGame() {
         this.totalClicks = 0;
         this.timeRemaining = this.totalTime;
@@ -52,7 +36,7 @@ class MixOrMatch {
             this.shuffleCards(this.cardsArray);
             this.countdown = this.startCountdown();
             this.busy = false;
-        }, 500)
+        }, 500);
         this.hideCards();
         this.timer.innerText = this.timeRemaining;
         this.ticker.innerText = this.totalClicks;
@@ -61,8 +45,7 @@ class MixOrMatch {
         return setInterval(() => {
             this.timeRemaining--;
             this.timer.innerText = this.timeRemaining;
-            if(this.timeRemaining === 0)
-                this.gameOver();
+            if (this.timeRemaining === 0) this.gameOver();
         }, 1000);
     }
     gameOver() {
@@ -82,35 +65,29 @@ class MixOrMatch {
         });
     }
     flipCard(card) {
-        if(this.canFlipCard(card)) {
+        if (this.canFlipCard(card)) {
             this.audioController.flip();
             this.totalClicks++;
             this.ticker.innerText = this.totalClicks;
             card.classList.add('visible');
 
-            if(this.cardToCheck) {
-                this.checkForCardMatch(card);
-            } else {
-                this.cardToCheck = card;
-            }
+            if (this.cardToCheck) this.checkForCardMatch(card);
+            else this.cardToCheck = card;
         }
     }
     checkForCardMatch(card) {
-        if(this.getCardType(card) === this.getCardType(this.cardToCheck))
+        if (this.getCardType(card) === this.getCardType(this.cardToCheck))
             this.cardMatch(card, this.cardToCheck);
-        else 
+        else
             this.cardMismatch(card, this.cardToCheck);
-
         this.cardToCheck = null;
     }
     cardMatch(card1, card2) {
-        this.matchedCards.push(card1);
-        this.matchedCards.push(card2);
+        this.matchedCards.push(card1, card2);
         card1.classList.add('matched');
         card2.classList.add('matched');
         this.audioController.match();
-        if(this.matchedCards.length === this.cardsArray.length)
-            this.victory();
+        if (this.matchedCards.length === this.cardsArray.length) this.victory();
     }
     cardMismatch(card1, card2) {
         this.busy = true;
@@ -120,31 +97,27 @@ class MixOrMatch {
             this.busy = false;
         }, 1000);
     }
-    shuffleCards(cardsArray) { // Fisher-Yates Shuffle Algorithm.
+    shuffleCards(cardsArray) { // Fisher-Yates
         for (let i = cardsArray.length - 1; i > 0; i--) {
-            let randIndex = Math.floor(Math.random() * (i + 1));
+            const randIndex = Math.floor(Math.random() * (i + 1));
             cardsArray[randIndex].style.order = i;
             cardsArray[i].style.order = randIndex;
         }
     }
-    getCardType(card) {
-        return card.getElementsByClassName('card-value')[0].src;
-    }
-    canFlipCard(card) {
-        return !this.busy && !this.matchedCards.includes(card) && card !== this.cardToCheck;
-    }
+    getCardType(card) { return card.getElementsByClassName('card-value')[0].src; }
+    canFlipCard(card) { return !this.busy && !this.matchedCards.includes(card) && card !== this.cardToCheck; }
 }
 
-if (document.readyState == 'loading') {
+if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', ready);
 } else {
     ready();
 }
 
 function ready() {
-    let overlays = Array.from(document.getElementsByClassName('overlay-text'));
-    let cards = Array.from(document.getElementsByClassName('card'));
-    let game = new MixOrMatch(100, cards);
+    const overlays = Array.from(document.getElementsByClassName('overlay-text'));
+    const cards    = Array.from(document.getElementsByClassName('card'));
+    const game     = new MixOrMatch(100, cards);
 
     overlays.forEach(overlay => {
         overlay.addEventListener('click', () => {
@@ -154,14 +127,12 @@ function ready() {
     });
 
     cards.forEach(card => {
-        card.addEventListener('click', () => {
-            game.flipCard(card);
-        });
+        card.addEventListener('click', () => game.flipCard(card));
     });
 }
 
 /* ============================================
-   Farcaster Miniapp — exact-fit zoom (iOS + Android hardened)
+   Farcaster Miniapp — exact-fit zoom (iOS + Android)
 ============================================ */
 (function () {
   if (!document.documentElement.classList.contains('in-miniapp')) return;
@@ -172,32 +143,34 @@ function ready() {
   const grid  = document.querySelector('.game-container');
   if (!(title && info && grid)) return;
 
-  // Stage wrapper we scale as one unit
+  // Wrap the main UI in a stage we can scale
   let stage = document.querySelector('.miniapp-stage');
   if (!stage) {
     stage = document.createElement('div');
     stage.className = 'miniapp-stage';
-    body.insertBefore(stage, title);
+    body.insertBefore(stage, title); // keep order
     stage.appendChild(title);
     stage.appendChild(info);
     stage.appendChild(grid);
   }
 
   let rafId = 0, timerId = 0;
-  function requestFit(ms = 0) {
+  const requestFit = (ms = 0) => {
     if (rafId) cancelAnimationFrame(rafId);
     if (timerId) clearTimeout(timerId);
     timerId = setTimeout(() => { rafId = requestAnimationFrame(fitStage); }, ms);
-  }
+  };
 
+  // Use the smallest of multiple viewport candidates (Android-safe)
   function getAvailSize() {
     const vv = window.visualViewport;
     const candW = [vv && vv.width, window.innerWidth, document.documentElement.clientWidth].filter(Boolean);
     const candH = [vv && vv.height, window.innerHeight, document.documentElement.clientHeight].filter(Boolean);
 
-    const sidePad   = 24;
-    const topPad    = 16;
-    const bottomPad = 22;
+    // Conservative breathing room, device-agnostic
+    const sidePad   = 24; // px
+    const topPad    = 16; // px
+    const bottomPad = 22; // px
 
     const w = Math.max(0, Math.min.apply(null, candW) - sidePad * 2);
     const h = Math.max(0, Math.min.apply(null, candH) - (topPad + bottomPad));
@@ -205,6 +178,7 @@ function ready() {
   }
 
   function fitStage() {
+    // Measure unscaled intrinsic size
     stage.style.transform = 'none';
     const rect = stage.getBoundingClientRect();
     const baseW = rect.width  || 1;
@@ -223,8 +197,10 @@ function ready() {
     stage.style.transform = `scale(${scale})`;
     stage.style.marginLeft = 'auto';
     stage.style.marginRight = 'auto';
+    stage.style.padding = '6px 0 10px'; // soft cushion inside stage
   }
 
+  // React to layout & viewport changes
   new ResizeObserver(() => requestFit(0)).observe(stage);
   new MutationObserver(() => requestFit(0)).observe(stage, { attributes: true, childList: true, subtree: true });
 
@@ -235,11 +211,12 @@ function ready() {
   }
   window.addEventListener('resize', () => requestFit(0));
   window.addEventListener('orientationchange', () => requestFit(100));
-  window.addEventListener('pageshow', () => requestFit(100));
+  window.addEventListener('pageshow', () => requestFit(100)); // Android restore/bfcache
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') requestFit(100);
   });
 
+  // Initial fit — wait for fonts/images & let layout settle
   async function readyThenFit() {
     try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
     const imgs = Array.from(stage.querySelectorAll('img'));
@@ -247,8 +224,8 @@ function ready() {
       : new Promise(res => { img.addEventListener('load', res, { once:true }); img.addEventListener('error', res, { once:true }); })));
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
     requestFit(0);
-    setTimeout(() => requestFit(120), 120);
-    setTimeout(() => requestFit(260), 260);
+    setTimeout(() => requestFit(140), 140);  // handle Android URL bar animation
+    setTimeout(() => requestFit(280), 280);
   }
 
   if (document.readyState === 'complete') readyThenFit();
