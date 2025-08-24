@@ -159,3 +159,58 @@ function ready() {
         });
     });
 }
+// === Miniapp exact-fit zoom (runs only in Farcaster) ===
+(function () {
+  if (!document.documentElement.classList.contains('in-miniapp')) return;
+
+  // 1) Wrap title + game-info + game-container inside a stage we can scale
+  const body = document.body;
+  const stage = document.createElement('div');
+  stage.className = 'miniapp-stage';
+
+  // collect the three blocks in order
+  const title = document.querySelector('.page-title');
+  const info  = document.querySelector('.game-info-container');
+  const grid  = document.querySelector('.game-container');
+  if (!(title && info && grid)) return;
+
+  // insert stage before title and move nodes inside
+  body.insertBefore(stage, title);
+  stage.appendChild(title);
+  stage.appendChild(info);
+  stage.appendChild(grid);
+
+  // 2) Compute scale so the whole stage fits inside the miniapp viewport
+  function fitStage() {
+    // Safe paddings so nothing touches the miniapp chrome
+    const sidePad = 16;   // left/right breathing room
+    const topPad  = 8;    // extra gap under the top bar
+    const bottomPad = 10; // space above the pill/home bar
+
+    const availW = Math.max(0, window.innerWidth  - sidePad * 2);
+    const availH = Math.max(0, window.innerHeight - (topPad + bottomPad));
+
+    // Measure natural desktop size of the stage (unscaled)
+    stage.style.transform = 'none';
+    const rect = stage.getBoundingClientRect();
+    const baseW = rect.width;
+    const baseH = rect.height;
+
+    // Scale by whichever dimension is the limiter
+    const scale = Math.min(availW / baseW, availH / baseH, 1);
+    stage.style.transform = `scale(${scale})`;
+
+    // Center horizontally
+    stage.style.marginLeft = 'auto';
+    stage.style.marginRight = 'auto';
+  }
+
+  // 3) Run now and on resize/rotate/content changes
+  const ro = new ResizeObserver(fitStage);
+  ro.observe(stage);
+  window.addEventListener('resize', fitStage);
+  window.addEventListener('orientationchange', fitStage);
+
+  // small defer so fonts/images have laid out
+  setTimeout(fitStage, 0);
+})();
