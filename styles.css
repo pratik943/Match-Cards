@@ -224,3 +224,61 @@ body.in-miniapp .card-face {
 body.in-miniapp .overlay-text.visible {
   animation: overlay-grow-mini 400ms forwards;
 }
+/* ===============================
+   Farcaster miniapp: zoom desktop
+   - keeps desktop sizes (125x175 cards, 4x4)
+   - scales whole board to fit without scroll
+   - no HTML changes required
+   - requires <html> & <body> to get .in-miniapp (SDK does this)
+================================= */
+html.in-miniapp,
+body.in-miniapp {
+  height: 100svh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: radial-gradient(#9D5900, #3D2200);
+}
+
+/* Slightly tighten title/counters so the grid gets more room */
+body.in-miniapp .page-title { font-size: clamp(2.6rem, 8vw, 3.6rem); margin: 10px 0 6px; }
+body.in-miniapp .game-info  { font-size: clamp(1.6rem, 6vw, 2.6rem); }
+
+/* === Zoom math (based on your original grid) ===
+   Base grid size (no scale): 
+     width  = 4*125 + 3*10 = 530px
+     height = 4*175 + 3*10 = 730px
+   We reserve some headroom for title/counters (header space).
+*/
+body.in-miniapp {
+  --baseW: 530px;
+  --baseH: 730px;
+  --gap: 10px;
+  --headerSpace: 160px; /* adjust if you change title/info sizes */
+  --availW: calc(100vw - 24px);                   /* a little side padding */
+  --availH: calc(100svh - var(--headerSpace));    /* space left for grid */
+  --scaleX: calc(var(--availW) / var(--baseW));
+  --scaleY: calc(var(--availH) / var(--baseH));
+  --miniapp-scale: min(var(--scaleX), var(--scaleY), 1);
+}
+
+/* Keep the grid at its desktop dimensions, then scale it down */
+body.in-miniapp .game-container {
+  width: var(--baseW);
+  height: var(--baseH);
+  margin: 8px auto 12px;
+  transform-origin: top center;
+  transform: scale(var(--miniapp-scale));
+  /* optional: crisper rendering on some webviews */
+  image-rendering: auto;
+  will-change: transform;
+}
+
+/* Faces should still fill the card box at any scale */
+body.in-miniapp .card,
+body.in-miniapp .card-face {
+  width: 100%;
+  height: 100%;
+}
