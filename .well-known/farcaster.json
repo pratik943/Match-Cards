@@ -1,0 +1,18 @@
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjE3NjUyLCJ0eXBlIjoiY3VzdG9keSIsImtleSI6IjB4RGM1QmU0Mjg2MEZBRDQ3MTFlQTQ5Nzk4QzE2RDRmMjgwQUMxMzZGMyJ9",
+    "payload": "eyJkb21haW4iOiJtYXRjaC1jYXJkcy1ydWJ5LnZlcmNlbC5hcHAifQ",
+    "signature": "MHhkYmQyOWRhYTk0MWJlM2VjMjMyNzFlNjdmNGJmOGQ4YzM1NzI0ODIyZjIxZTFkMGE0M2I3ZGUwMzg2ZDMwMzE4NDBjMDQ5Zjc0Mzg2NzQzZTgwNmQxODY1N2MyNzM3MmVkNjRiODg2ZDI4OTEwM2M2YWI2YzUwYmRiOWNmMDdjMTFj"
+  },
+  "frame": {
+    "version": "1",
+    "name": "MATCH CARDS",
+    "iconUrl": "https://match-cards-ruby.vercel.app/icon.png",
+    "homeUrl": "https://match-cards-ruby.vercel.app",
+    "imageUrl": "https://match-cards-ruby.vercel.app/image.GIF",
+    "buttonTitle": "PLAY NOW",
+    "splashImageUrl": "https://match-cards-ruby.vercel.app/splash.png",
+    "splashBackgroundColor": "#111111",
+    "webhookUrl": "https://match-cards-ruby.vercel.app/api/webhook"
+  }
+}
