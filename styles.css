@@ -444,3 +444,30 @@ body.in-miniapp {
   align-items: center;
   justify-content: flex-start;
 }
+/* === Farcaster Miniapp hardening (iOS + Android) === */
+html.in-miniapp,
+body.in-miniapp {
+  height: 100dvh;                           /* tracks dynamic viewport reliably */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Wrap created in JS; make it measurable so scaling is accurate on Android */
+.in-miniapp .miniapp-stage {
+  display: inline-block;                    /* real intrinsic size for measuring */
+  width: auto;
+  height: auto;
+  transform: translateZ(0);                 /* reduce blur while scaled */
+  will-change: transform;
+}
+
+/* Gentle spacing so content doesn't touch top/bottom chrome */
+.in-miniapp .page-title { margin-top: 10px; margin-bottom: 6px; }
+.in-miniapp .game-info-container { margin-bottom: 10px; }
+
+/* Keep the grid centered even when scaled */
+.in-miniapp body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
