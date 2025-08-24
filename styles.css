@@ -160,77 +160,12 @@ body {
   .game-info-container { flex-direction: column; align-items: center; }
 }
 
-/* ---------------------------
-   Farcaster miniapp (Option B)
-   Fit 4x4 on one screen, no scroll
----------------------------- */
-html.in-miniapp,
-body.in-miniapp {
-  height: 100svh;
-  overflow: hidden;
-  overscroll-behavior: none;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-}
-
-body.in-miniapp .page-title {
-  font-size: clamp(2rem, 7vw, 3rem);
-  margin: 8px 0 8px;
-}
-
-body.in-miniapp .game-info { font-size: 2.4em; }
-
-body.in-miniapp .game-container {
-  /* sizing variables */
-  --header-space: 140px;   /* title + counters + margins */
-  --gap: 8px;
-  --rows: 4;
-  --cardRatio: 5/7;        /* original 125x175 -> 5:7 */
-
-  /* available height for the grid */
-  --gridH: calc(100svh - var(--header-space));
-
-  /* card height so 4 rows + 3 gaps fit */
-  --cardH: calc((var(--gridH) - (var(--rows) - 1) * var(--gap)) / var(--rows));
-  --cardW: calc(var(--cardH) * var(--cardRatio));
-
-  display: grid;
-  grid-template-columns: repeat(4, var(--cardW));
-  grid-auto-rows: var(--cardH);
-  grid-gap: var(--gap);
-  width: calc(4 * var(--cardW) + 3 * var(--gap));
-  margin: 8px auto 12px;
-  justify-content: center;
-}
-
-/* make cards fill the computed cells */
-body.in-miniapp .card {
-  width: 100%;
-  height: 100%;
-}
-
-/* ensure faces stretch with the scaled card */
-body.in-miniapp .card-face {
-  width: 100%;
-  height: 100%;
-}
-
-/* slightly smaller overlay animation in miniapp */
-@keyframes overlay-grow-mini {
-  from { background-color: rgba(0,0,0,0); font-size: 0; }
-  to   { background-color: rgba(0,0,0,.8); font-size: 6rem; }
-}
-body.in-miniapp .overlay-text.visible {
-  animation: overlay-grow-mini 400ms forwards;
-}
-/* ===============================
-   Farcaster miniapp: zoom desktop
-   - keeps desktop sizes (125x175 cards, 4x4)
-   - scales whole board to fit without scroll
-   - no HTML changes required
-   - requires <html> & <body> to get .in-miniapp (SDK does this)
-================================= */
+/* =====================================================
+   Farcaster miniapp: zoomed desktop + alignment tweaks
+   - desktop board kept at original size, then scaled
+   - title kept visible
+   - grid nudged slightly left and lower
+===================================================== */
 html.in-miniapp,
 body.in-miniapp {
   height: 100svh;
@@ -242,43 +177,54 @@ body.in-miniapp {
   background: radial-gradient(#9D5900, #3D2200);
 }
 
-/* Slightly tighten title/counters so the grid gets more room */
-body.in-miniapp .page-title { font-size: clamp(2.6rem, 8vw, 3.6rem); margin: 10px 0 6px; }
-body.in-miniapp .game-info  { font-size: clamp(1.6rem, 6vw, 2.6rem); }
+/* keep the title visible and nicely sized */
+body.in-miniapp .page-title {
+  font-size: clamp(2.6rem, 8vw, 3.6rem);
+  margin: 16px 0 8px; /* more top space so it never clips */
+  text-align: center;
+}
 
-/* === Zoom math (based on your original grid) ===
-   Base grid size (no scale): 
-     width  = 4*125 + 3*10 = 530px
-     height = 4*175 + 3*10 = 730px
-   We reserve some headroom for title/counters (header space).
-*/
+/* slightly smaller counters so the board has room */
+body.in-miniapp .game-info {
+  font-size: clamp(1.6rem, 6vw, 2.6rem);
+  margin: 4px 12px;
+}
+
+/* base desktop grid dimensions (no scale) */
 body.in-miniapp {
-  --baseW: 530px;
-  --baseH: 730px;
-  --gap: 10px;
-  --headerSpace: 160px; /* adjust if you change title/info sizes */
-  --availW: calc(100vw - 24px);                   /* a little side padding */
-  --availH: calc(100svh - var(--headerSpace));    /* space left for grid */
+  --baseW: 530px; /* 4*125 + 3*10 */
+  --baseH: 730px; /* 4*175 + 3*10 */
+  --headerSpace: 160px;            /* title + counters + margins */
+  --availW: calc(100vw - 24px);    /* a little side padding */
+  --availH: calc(100svh - var(--headerSpace));
   --scaleX: calc(var(--availW) / var(--baseW));
   --scaleY: calc(var(--availH) / var(--baseH));
   --miniapp-scale: min(var(--scaleX), var(--scaleY), 1);
 }
 
-/* Keep the grid at its desktop dimensions, then scale it down */
+/* keep desktop layout; just scale it, then offset left/down */
 body.in-miniapp .game-container {
   width: var(--baseW);
   height: var(--baseH);
-  margin: 8px auto 12px;
+  margin: 20px auto 12px;           /* push a bit lower */
+  margin-left: -10px;               /* nudge slightly left; adjust to taste */
   transform-origin: top center;
   transform: scale(var(--miniapp-scale));
-  /* optional: crisper rendering on some webviews */
-  image-rendering: auto;
   will-change: transform;
 }
 
-/* Faces should still fill the card box at any scale */
+/* ensure card boxes & faces always fill the scaled grid cell */
 body.in-miniapp .card,
 body.in-miniapp .card-face {
   width: 100%;
   height: 100%;
+}
+
+/* smaller overlay animation so it fits on miniapp */
+@keyframes overlay-grow-mini {
+  from { background-color: rgba(0,0,0,0); font-size: 0; }
+  to   { background-color: rgba(0,0,0,.8); font-size: 6rem; }
+}
+body.in-miniapp .overlay-text.visible {
+  animation: overlay-grow-mini 400ms forwards;
 }
