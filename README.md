@@ -1,4 +1,4 @@
-# 🎃 Mix-Or-Match — Farcaster Miniapp  
+# 🎃 Match Cards — Farcaster Miniapp  
 
 A spooky **card matching game** adapted into a **Farcaster Miniapp**.  
 Play by flipping cards and matching all pairs before the timer runs out.  
@@ -73,7 +73,7 @@ vercel deploy
     "title":"Play Now",
     "action":{
       "type":"launch_frame",
-      "name":"Mix Or Match",
+      "name":"Match Cards",
       "url":"https://yourdomain.com",
       "splashImageUrl":"https://yourdomain.com/splash.png",
       "splashBackgroundColor":"#111111"
