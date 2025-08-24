@@ -419,3 +419,28 @@ body.in-miniapp {
   align-items: center;
   justify-content: flex-start;
 }
+/* === Farcaster Miniapp hardening (iOS + Android) === */
+
+/* Use dynamic viewport height so Android URL bar changes don't clip content */
+html.in-miniapp,
+body.in-miniapp {
+  height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Make the scaled stage measurable and stable for Android WebView */
+.in-miniapp .miniapp-stage {
+  display: inline-block;     /* ensures getBoundingClientRect() reads true size */
+  width: auto;
+  height: auto;
+  transform: translateZ(0);  /* hint to GPU; reduces blurriness on scale */
+  will-change: transform;
+}
+
+/* Keep overall layout tidy when wrapped inside the miniapp stage */
+.in-miniapp body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
