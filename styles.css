@@ -299,3 +299,60 @@ body.in-miniapp .card {
 
 /* Faces still fill the card box */
 body.in-miniapp .card-face { width: 100%; height: 100%; }
+/* ==== Farcaster miniapp: desktop-look via zoom (always 4x4) ==== */
+html.in-miniapp,
+body.in-miniapp {
+  height: 100svh;
+  overflow: hidden;
+  overscroll-behavior: none;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: radial-gradient(#9D5900, #3D2200);
+}
+
+/* keep title/counters visible but compact */
+body.in-miniapp .page-title { font-size: clamp(2.4rem, 8vw, 3.4rem); margin: 14px 0 6px; }
+body.in-miniapp .game-info   { font-size: clamp(1.5rem, 6vw, 2.2rem); margin: 2px 10px; }
+
+/* Desktop board dimensions (no scale) */
+body.in-miniapp {
+  --baseW: 530px;  /* 4*125 + 3*10 */
+  --baseH: 730px;  /* 4*175 + 3*10 */
+  --sidePad: 20px;
+  --headerSpace: 130px; /* title + counters + margins */
+
+  --availW: calc(100vw - var(--sidePad));
+  --availH: calc(100svh - var(--headerSpace));
+
+  --scaleX: calc(var(--availW) / var(--baseW));
+  --scaleY: calc(var(--availH) / var(--baseH));
+  --miniapp-scale: min(var(--scaleX), var(--scaleY), 1);
+}
+
+/* Freeze layout at desktop size; then scale down to fit */
+body.in-miniapp .game-container {
+  width: var(--baseW);
+  height: var(--baseH);
+  display: grid;
+  grid-template-columns: repeat(4, 125px); /* force 4 columns */
+  grid-gap: 10px;
+  justify-content: center;
+  margin: 12px auto 12px;
+  transform-origin: top center;
+  transform: scale(var(--miniapp-scale));
+}
+
+/* Override your mobile @media (which sets 2 columns under 600px) */
+@media (max-width: 600px) {
+  body.in-miniapp .game-container {
+    grid-template-columns: repeat(4, 125px) !important;
+  }
+}
+
+/* Keep card boxes at desktop size; scaling handles fit */
+body.in-miniapp .card       { width: 125px; height: 175px; }
+body.in-miniapp .card-face  { width: 100%; height: 100%; }
+
+/* Optional: nudge board slightly left/down if you want */
+body.in-miniapp .game-container { margin-left: -8px; /* tweak */ }
