@@ -75,13 +75,8 @@ body {
   backface-visibility: hidden;
 }
 
-.card.visible .card-back {
-  transform: rotateY(-180deg); 
-}
-
-.card.visible .card-front {
-  transform: rotateY(0); 
-}
+.card.visible .card-back { transform: rotateY(-180deg); }
+.card.visible .card-front { transform: rotateY(0); }
 
 .card.matched .card-front .card-value {
   animation: dance 1s linear infinite 500ms;
@@ -90,7 +85,7 @@ body {
 .card-back {
   background-color: black;
   border-color: #FF6D00;
-  transform: rotateY(0); 
+  transform: rotateY(0);
 }
 
 .cob-web {
@@ -100,33 +95,12 @@ body {
   height: 47px;
 }
 
-.card-face:hover .cob-web {
-  width: 52px;
-  height: 52px;
-}
+.card-face:hover .cob-web { width: 52px; height: 52px; }
 
-.cob-web-top-left {
-  transform: rotate(270deg);
-  top: 0;
-  left: 0;
-}
-
-.cob-web-top-right {
-  top: 0;
-  right: 0;
-}
-
-.cob-web-bottom-left {
-  transform: rotate(180deg);
-  bottom: 0;
-  left: 0;
-}
-
-.cob-web-bottom-right {
-  transform: rotate(90deg);
-  bottom: 0;
-  right: 0;
-}
+.cob-web-top-left { transform: rotate(270deg); top: 0; left: 0; }
+.cob-web-top-right { top: 0; right: 0; }
+.cob-web-bottom-left { transform: rotate(180deg); bottom: 0; left: 0; }
+.cob-web-bottom-right { transform: rotate(90deg); bottom: 0; right: 0; }
 
 .spider {
   align-self: flex-start;
@@ -134,9 +108,7 @@ body {
   transform: translateY(-10px);
 }
 
-.card-back:hover .spider {
-  transform: translateY(0);
-}
+.card-back:hover .spider { transform: translateY(0); }
 
 .card-value {
   position: relative;
@@ -144,9 +116,7 @@ body {
   transform: scale(.9);
 }
 
-.card-front:hover .card-value {
-  transform: scale(1);
-}
+.card-front:hover .card-value { transform: scale(1); }
 
 .card-front {
   background-color: #FFBB89;
@@ -155,10 +125,7 @@ body {
 }
 
 .overlay-text {
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   z-index: 100;
   display: none;
   position: fixed;
@@ -170,9 +137,7 @@ body {
   transition: background-color 500ms, font-size 500ms;
 }
 
-.overlay-text-small {
-  font-size: .3em;
-}
+.overlay-text-small { font-size: .3em; }
 
 .overlay-text.visible {
   display: flex;
@@ -180,40 +145,25 @@ body {
 }
 
 @keyframes dance {
-  0%, 100% {
-    transform: rotate(0)
-  }
-  25% {
-    transform: rotate(-30deg)
-  }
-  75% {
-    transform: rotate(30deg)
-  }
+  0%, 100% { transform: rotate(0) }
+  25%      { transform: rotate(-30deg) }
+  75%      { transform: rotate(30deg) }
 }
 
 @keyframes overlay-grow {
-  from {
-    background-color: rgba(0, 0, 0, 0);
-    font-size: 0;
-  }
-  to {
-    background-color: rgba(0, 0, 0, .8);
-    font-size: 10em;
-  }
+  from { background-color: rgba(0, 0, 0, 0); font-size: 0; }
+  to   { background-color: rgba(0, 0, 0, .8); font-size: 10em; }
 }
 
 @media (max-width: 600px) {
-  .game-container {
-    grid-template-columns: repeat(2, auto)
-  }
-
-  .game-info-container {
-    flex-direction: column;
-    align-items: center;
-  }
+  .game-container { grid-template-columns: repeat(2, auto) }
+  .game-info-container { flex-direction: column; align-items: center; }
 }
 
-/* --- 👇 Miniapp-only overrides 👇 --- */
+/* ---------------------------
+   Farcaster miniapp (Option B)
+   Fit 4x4 on one screen, no scroll
+---------------------------- */
 html.in-miniapp,
 body.in-miniapp {
   height: 100svh;
@@ -225,16 +175,48 @@ body.in-miniapp {
 }
 
 body.in-miniapp .page-title {
-  font-size: clamp(2.2rem, 8vw, 3.2rem);
-  margin: 8px 0 12px;
+  font-size: clamp(2rem, 7vw, 3rem);
+  margin: 8px 0 8px;
 }
+
+body.in-miniapp .game-info { font-size: 2.4em; }
 
 body.in-miniapp .game-container {
-  width: min(424px, 100vw);
+  /* sizing variables */
+  --header-space: 140px;   /* title + counters + margins */
+  --gap: 8px;
+  --rows: 4;
+  --cardRatio: 5/7;        /* original 125x175 -> 5:7 */
+
+  /* available height for the grid */
+  --gridH: calc(100svh - var(--header-space));
+
+  /* card height so 4 rows + 3 gaps fit */
+  --cardH: calc((var(--gridH) - (var(--rows) - 1) * var(--gap)) / var(--rows));
+  --cardW: calc(var(--cardH) * var(--cardRatio));
+
+  display: grid;
+  grid-template-columns: repeat(4, var(--cardW));
+  grid-auto-rows: var(--cardH);
+  grid-gap: var(--gap);
+  width: calc(4 * var(--cardW) + 3 * var(--gap));
   margin: 8px auto 12px;
-  grid-gap: 8px;
+  justify-content: center;
 }
 
+/* make cards fill the computed cells */
+body.in-miniapp .card {
+  width: 100%;
+  height: 100%;
+}
+
+/* ensure faces stretch with the scaled card */
+body.in-miniapp .card-face {
+  width: 100%;
+  height: 100%;
+}
+
+/* slightly smaller overlay animation in miniapp */
 @keyframes overlay-grow-mini {
   from { background-color: rgba(0,0,0,0); font-size: 0; }
   to   { background-color: rgba(0,0,0,.8); font-size: 6rem; }
